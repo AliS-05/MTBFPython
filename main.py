@@ -6,19 +6,12 @@ import matplotlib.pyplot as plt #plt for plotting
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
+MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Failure Data).csv"
+CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Initial MTBF).csv"
 
-#n = systems / planes
-#n_sub = num different subsystems on a plane
-#n_f = number of different failure types for a subsystem (FAILURE_TYPES)
-#tau denotes flight hours
-#n_jk where j denotes subsystem and k denotes failure type
-#nStar is defined as 1 + sum(i=1 -> n(planes), sum(l=1 -> n_d(number of subsystems), n_lijk)), 
-# where l denotes the day i denotes the system / plane and j & k remain the same
-#in English nStar is simply the amount of times a certain failure type happened on a subsystem historically
-#tauStar is the contractors estimates of the MTBF (theta_jk) plus the sum of all flight hours of a given subsytems on every plane
-
-maintenanceData = pd.read_csv("/mnt/c/Users/Ali/Downloads/MaintenanceDatasetCSV.csv")
-contractorMTBF = pd.read_csv("/mnt/c/Users/Ali/Downloads/InitialMTBF.csv", skiprows = 1)
+maintenanceData = pd.read_csv("/mnt/c/Users/sefra/Downloads/maintenance dataset(Failure Data).csv")
+#skip first row "Failure Type,1,2,6"
+contractorMTBF = pd.read_csv("/mnt/c/Users/sefra/Downloads/maintenance dataset(Initial MTBF).csv", skiprows=1)
 
 # reshape csv format to give each failure its own row for ease of access
 sub_cols = ['Sub'] + [f'Sub.{i}' for i in range(1, 13)]
@@ -40,14 +33,9 @@ for _, row in maintenanceData.iterrows():
 
 long_df = pd.DataFrame(rows)
 
-# first step DONE
-# calculate nStar
-
-#separate into 3 columns, subsystem, failure type, count
 failure_counts = long_df.groupby(['subsystem', 'failure_type']).size().reset_index(name='count')
 
-nStar = {(row['subsystem'], row['failure_type']): 1 + row['count'] 
-         for _, row in failure_counts.iterrows()}
+nStar = {(row['subsystem'], row['failure_type']): 1 + row['count'] for _, row in failure_counts.iterrows()}
 
 
 # calculate tauStar
@@ -60,9 +48,10 @@ flightHours = round(maintenanceData["Flight Hours"].sum(numeric_only=True), 3)
 
 #SubSystem, FailureType
 #tauStar: dict[tuple[int, int], float] = {}
+
 tauStar = {}
 for _, row in contractorMTBF.iterrows():
-    tauStar[row["SubSystem"], 1] = round(row["MTBF Inherent (hrs)"] + flightHours, 3)
+    tauStar[row["SubSystem"], 1] = round(row['MTBF Inherent (hrs)'] + flightHours, 3)
     tauStar[row["SubSystem"], 2] = round(row["MTBF Induced (hrs)"] + flightHours, 3)
     tauStar[row["SubSystem"], 6] = round(row["MTBF No Defect (hrs)"] + flightHours, 3)
 
@@ -104,8 +93,9 @@ confidenceIntervalLower = {}
 
 for (subsystem, failureType), tau in tauStar.items():
     n = nStar.get((subsystem, failureType), 1)
-    confidenceIntervalUpper[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.975, df=2*n))
-    confidenceIntervalLower[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.025, df=2*n))
+    #equi-tailed two sided credible interval with 2n degrees of freedom
+    confidenceIntervalUpper[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.025, df=2*n))
+    confidenceIntervalLower[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.975, df=2*n))
 
 for i in confidenceIntervalUpper, confidenceIntervalLower:
     print(i)
