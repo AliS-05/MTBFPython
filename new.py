@@ -3,12 +3,16 @@ import numpy as np #np for general data manipulation and number crunching
 import scipy.stats as stats #stats for stats functions
 import matplotlib.pyplot as plt #plt for plotting 
 from collections import defaultdict #for not having to worry about initializing dicts
+import os
+
+
 
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
 MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Failure Data).csv"
 CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Initial MTBF).csv"
+os.makedirs("graphs", exist_ok=True)
 
 maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
 contractorMTBF = pd.read_csv(CONTRACTOR_MTBF_FILEPATH, skiprows=1)
@@ -80,6 +84,12 @@ for num, row in maintenanceData.iterrows():
         print() 
         #continue
 
+#i = (sub, type)
+#thetaHat.get(i) = estimate
+for i in tauStar:
+    if not pd.notna(thetaHat.get(i)):
+        thetaHat[i] = (runningFlightHours + tauStar[i]) / nStar[i]
+
 thetaHatDf = pd.DataFrame([
     {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
     for(sub, ft), theta in sorted(thetaHat.items())
@@ -92,3 +102,26 @@ table3.index.name = 'Subsystem'
 
 print(table3.to_string())
 
+contractorEstimate = {}
+for _, row in contractorMTBF.iterrows():
+    contractorEstimate[row["SubSystem"], 1] = row['MTBF Inherent (hrs)']
+    contractorEstimate[row["SubSystem"], 2] = row['MTBF Induced (hrs)']
+    contractorEstimate[row["SubSystem"], 6] = row['MTBF No Defect (hrs)']
+
+for (sub, typ), series in graphDict.items():
+    print((sub,typ))
+    dates, theta, upper, lower = zip(*series)
+    plt.figure(figsize=(10, 5))
+    plt.axhline(contractorEstimate[(sub, typ)], color='blue', linestyle=':', label='Contractor MTBF')
+    plt.plot(dates, theta, 'r-', label='Bayes Estimate')
+    plt.plot(dates, upper, 'r--', label='95% CI')
+    plt.plot(dates, lower, 'r--')
+    plt.title(f"Subsystem {sub} Type {typ}")
+    plt.xlabel("Date")
+    plt.ylabel("MTBF (hrs)")
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"graphs/{sub}_{typ}.png")
+    plt.close()
