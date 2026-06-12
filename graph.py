@@ -86,21 +86,10 @@ for num, row in maintenanceData.iterrows():
 
 #i = (sub, type)
 #thetaHat.get(i) = estimate
+#entries with no incidencts recorded
 for i in tauStar:
     if not pd.notna(thetaHat.get(i)):
         thetaHat[i] = (runningFlightHours + tauStar[i]) / nStar[i]
-
-thetaHatDf = pd.DataFrame([
-    {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
-    for(sub, ft), theta in sorted(thetaHat.items())
-])
-
-
-table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
-table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
-table3.index.name = 'Subsystem'
-
-print(table3.to_string())
 
 contractorEstimate = {}
 for _, row in contractorMTBF.iterrows():
