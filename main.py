@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt #plt for plotting
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
-MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Failure Data).csv"
-CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenance dataset(Initial MTBF).csv"
+MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenanceDataReal.csv"
+CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/predictedReal.csv"
 
-maintenanceData = pd.read_csv("/mnt/c/Users/sefra/Downloads/maintenance dataset(Failure Data).csv")
+maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
 #skip first row "Failure Type,1,2,6"
-contractorMTBF = pd.read_csv("/mnt/c/Users/sefra/Downloads/maintenance dataset(Initial MTBF).csv", skiprows=1)
+contractorMTBF = pd.read_csv(CONTRACTOR_MTBF_FILEPATH, skiprows=1)
 
 # reshape csv format to give each failure its own row for ease of access
 sub_cols = ['Sub'] + [f'Sub.{i}' for i in range(1, 13)]
@@ -51,7 +51,8 @@ flightHours = round(maintenanceData["Flight Hours"].sum(numeric_only=True), 3)
 
 tauStar = {}
 for _, row in contractorMTBF.iterrows():
-    tauStar[row["SubSystem"], 1] = round(row['MTBF Inherent (hrs)'] + flightHours, 3)
+    print(row)
+    tauStar[row["SubSystem"], 1] = round(row["MTBF Inherent (hrs)"] + flightHours, 3)
     tauStar[row["SubSystem"], 2] = round(row["MTBF Induced (hrs)"] + flightHours, 3)
     tauStar[row["SubSystem"], 6] = round(row["MTBF No Defect (hrs)"] + flightHours, 3)
 
@@ -88,16 +89,16 @@ print(table3.to_string())
 
 
 
-confidenceIntervalUpper = {}
-confidenceIntervalLower = {}
-
-for (subsystem, failureType), tau in tauStar.items():
-    n = nStar.get((subsystem, failureType), 1)
-    #equi-tailed two sided credible interval with 2n degrees of freedom
-    confidenceIntervalUpper[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.025, df=2*n))
-    confidenceIntervalLower[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.975, df=2*n))
-
-for i in confidenceIntervalUpper, confidenceIntervalLower:
-    print(i)
-
-
+#confidenceIntervalUpper = {}
+#confidenceIntervalLower = {}
+#
+#for (subsystem, failureType), tau in tauStar.items():
+#    n = nStar.get((subsystem, failureType), 1)
+#    #equi-tailed two sided credible interval with 2n degrees of freedom
+#    confidenceIntervalUpper[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.025, df=2*n))
+#    confidenceIntervalLower[(subsystem, failureType)] = 2*tau/(stats.chi2.ppf(0.975, df=2*n))
+#
+#for i in confidenceIntervalUpper, confidenceIntervalLower:
+#    print(i)
+#
+#
