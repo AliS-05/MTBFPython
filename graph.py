@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt #plt for plotting
 from collections import defaultdict #for not having to worry about initializing dicts
 import os
 
-
-
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6

@@ -3,126 +3,86 @@ import numpy as np #np for general data manipulation and number crunching
 import scipy.stats as stats #stats for stats functions
 import scipy.special as sp #gammainc, factorial
 import matplotlib.pyplot as plt #plt for plotting 
-
-#constants
-NUM_SUBSYSTEMS = 29
-FAILURE_TYPES = 3 # 1, 2, 6
-MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenanceDataReal.csv"
-CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/predictedReal.csv"
-
-maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
-#skip first row "Failure Type,1,2,6"
-contractorMTBF = pd.read_csv(CONTRACTOR_MTBF_FILEPATH, skiprows=1)
-contractorMTBF["SubSystem"] = pd.to_numeric(contractorMTBF["SubSystem"], errors="coerce")
-contractorMTBF = contractorMTBF.dropna(subset=["SubSystem"])
-contractorEstimates = {}
-for _, row in contractorMTBF.iterrows():
-    contractorEstimates[row["SubSystem"], 1] = round(row['MTBF Inherent (hrs)'], 3)
-    contractorEstimates[row["SubSystem"], 2] = round(row["MTBF Induced (hrs)"], 3)
-    contractorEstimates[row["SubSystem"], 6] = round(row["MTBF No Defect (hrs)"], 3)
-
-# reshape csv format to give each failure its own row for ease of access
-sub_cols = ['Sub'] + [f'Sub.{i}' for i in range(1, 13)]
-type_cols = ['Type'] + [f'Type.{i}' for i in range(1, 13)]
-
-rows = []
-for _, row in maintenanceData.iterrows():
-    for sub_col, type_col in zip(sub_cols, type_cols):
-        sub = row[sub_col]
-        failure_type = row[type_col]
-        if pd.notna(sub) and pd.notna(failure_type):
-            rows.append({
-                'date': row['Date'],
-                'flight_hours': row['Flight Hours'],
-                'system': row['System'],
-                'subsystem': int(sub),
-                'failure_type': int(failure_type)
-            })
-
-long_df = pd.DataFrame(rows)
-
-failure_counts = long_df.groupby(['subsystem', 'failure_type']).size().reset_index(name='count')
-
-nStar = {(row['subsystem'], row['failure_type']): 1 + row['count'] for _, row in failure_counts.iterrows()}
+import data
 
 
-# calculate tauStar
-#calculate total flight hours recorded in dataset first.
-#then add that number to contractorMTBF and add result into tauStar
+maintenanceData = data.cleanMaintenanceData()
+flightHours = data.calculateTotalFlightHours(maintenanceData)
 
-flightHours = round(maintenanceData["Flight Hours"].sum(numeric_only=True), 3)
+maintenanceData = data.reshapeMaintenanceData(maintenanceData)
 
+contractorMTBF = data.cleanContractorData()
 
+contractorEstimates = data.constructContractorEstimates(contractorMTBF)
 
-#SubSystem, FailureType
-#tauStar: dict[tuple[int, int], float] = {}
-
-tauStar = {}
-for _, row in contractorMTBF.iterrows():
-    tauStar[row["SubSystem"], 1] = round(row["MTBF Inherent (hrs)"] + flightHours, 3)
-    tauStar[row["SubSystem"], 2] = round(row["MTBF Induced (hrs)"] + flightHours, 3)
-    tauStar[row["SubSystem"], 6] = round(row["MTBF No Defect (hrs)"] + flightHours, 3)
-
-
-
-# nHatBayes = n* / tau* — Bayes estimator of failure rate
-#nHatBayes: dict[tuple[int, int], float] = {}
-nHatBayes = {}
-for (subsystem, failureType), tau in tauStar.items():
-    n = nStar.get((subsystem, failureType), 1) #returns 1 by default
-    # n*_jk / tau*_jk
-    nHatBayes[subsystem, failureType] = round(n / tau, 2)
-
-# theta_hat = tau* / n* — Bayes MTBF estimate (Table 3)
-#thetaHat is just inverse of nHatBayes, table 3 output
-
-#thetaHat: dict[tuple[int, int], float] = {}
-thetaHat = {}
-for (subsystem, failureType), tau in tauStar.items():
-    n = nStar.get((subsystem, failureType), 1)
-    thetaHat[(subsystem, failureType)] = round(tau / n, 2)
-
-thetaHatDf = pd.DataFrame([
-    {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
-    for(sub, ft), theta in sorted(thetaHat.items())
-])
-
-
-table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
-table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
-table3.index.name = 'Subsystem'
-
-print(table3.to_string())
-
-
-#calculating bayes factor
+nStar : dict[tuple[int,int], float] = {}
+tauStar: dict[tuple[int, int], float] = {}
+thetaHat: dict[tuple[int, int], float] = {}
 bayesFactor: dict[tuple[int, int], float] = {}
-beta = 0.1
-prior = np.exp(-1/(1-beta)) / (1 - np.exp(-1/(1-beta)))  # P(H1)/P(H0), constant for fixed beta
 
-for (sub, typ), tau in tauStar.items():
-  theta0 = contractorEstimates[(sub, typ)]
-  failures = nStar.get((sub,typ), 1)
-  x = tau / ((1-beta) * theta0)
-  #lower incomplete
-  probH0 = sp.gammainc(failures, x)
-  #upper incomplete 'incc'
-  probH1 = sp.gammaincc(failures, x)
-  bayesFactor[(sub, typ)] = round((probH1 / probH0) / prior, 2)
+def calculateNStar():
+    failureCounts = maintenanceData.groupby(['subsystem', 'failure_type']).size().reset_index(name='count')
+    for _, row in failureCounts.iterrows():
+        nStar[(row['subsystem'], row['failure_type'])] =  1 + row['count']
 
-bfDf = pd.DataFrame([
-  {"Subsystem": sub, "Failure Type": ft, "BF": bf}
-  for (sub, ft), bf in sorted(bayesFactor.items())
-])
+def calculateTauStar():
+    for _, row in contractorMTBF.iterrows():
+        tauStar[row["SubSystem"], 1] = round(row["MTBF Inherent (hrs)"] + flightHours, 3)
+        tauStar[row["SubSystem"], 2] = round(row["MTBF Induced (hrs)"] + flightHours, 3)
+        tauStar[row["SubSystem"], 6] = round(row["MTBF No Defect (hrs)"] + flightHours, 3)
 
-table6 = bfDf.pivot(index='Subsystem', columns='Failure Type', values='BF')
-table6.columns = ['BF for Type 1', 'BF for Type 2', 'BF for Type 6']
-table6.index.name = 'Subsystem'
+def calculateBayesEstimate():
+    # theta_hat = tau* / n* 
+    for (subsystem, failureType), tau in tauStar.items():
+        n = nStar.get((subsystem, failureType), 1)
+        thetaHat[(subsystem, failureType)] = round(tau / n, 2)
 
-def fmt(x):
-    if pd.isna(x):
-        return "NaN"
-    if abs(x) > 1e6:
-        return f"{x:.1e}"
-    return f"{x:.1f}"
-print(table6.to_string(float_format=fmt))
+    thetaHatDf = pd.DataFrame([
+        {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
+        for(sub, ft), theta in sorted(thetaHat.items())
+    ])
+
+    #printable table
+    table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
+    table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
+    table3.index.name = 'Subsystem'
+    print(table3.to_string())
+
+def calculateBayesFactor():
+    #calculating bayes factor
+    beta = 0.1
+    prior = np.exp(-1/(1-beta)) / (1 - np.exp(-1/(1-beta)))  # P(H1)/P(H0), constant for fixed beta
+
+    for (sub, typ), tau in tauStar.items():
+        theta0 = contractorEstimates[(sub, typ)]
+        failures = nStar.get((sub,typ), 1)
+        x = tau / ((1-beta) * theta0)
+        #lower incomplete
+        probH0 = sp.gammainc(nStar.get((sub,typ),1), (tau / ((1-beta) * theta0)))
+        #upper incomplete 'incc'
+        probH1 = sp.gammaincc(nStar.get((sub,typ),1), (tau / ((1-beta) * theta0))) 
+        bayesFactor[(sub, typ)] = round((probH1 / probH0) / prior, 2)
+
+    bfDf = pd.DataFrame([
+      {"Subsystem": sub, "Failure Type": ft, "BF": bf}
+      for (sub, ft), bf in sorted(bayesFactor.items())
+    ])
+
+    table6 = bfDf.pivot(index='Subsystem', columns='Failure Type', values='BF')
+    table6.columns = ['BF for Type 1', 'BF for Type 2', 'BF for Type 6']
+    table6.index.name = 'Subsystem'
+
+    #formatting so table doesnt pritn every value scientifically
+    def fmt(x):
+        if pd.isna(x):
+            return "NaN"
+        if abs(x) > 1e6:
+            return f"{x:.1e}"
+        return f"{x:.1f}"
+
+    print(table6.to_string(float_format=fmt))
+
+calculateNStar()
+calculateTauStar()
+calculateBayesEstimate()
+calculateBayesFactor()
