@@ -12,6 +12,7 @@ NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
 MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenanceDataReal.csv"
 CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/predictedReal.csv"
+OUTPUT_FILEPATH = "./graphs"
 
 maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
 #skip first row "Failure Type,1,2,6"
@@ -20,15 +21,6 @@ contractorMTBF["SubSystem"] = pd.to_numeric(contractorMTBF["SubSystem"], errors=
 contractorMTBF = contractorMTBF.dropna(subset=["SubSystem"])
 #remove all blank separator columns
 maintenanceData.drop(maintenanceData.filter(regex='^Unnamed').columns, axis = 1, inplace=True)
-
-#contractorEstimate = {}
-#for _, row in contractorMTBF.iterrows():
-#    contractorEstimate[row["SubSystem"], 1] = row['MTBF Inherent (hrs)']
-#    contractorEstimate[row["SubSystem"], 2] = row['MTBF Induced (hrs)']
-#    contractorEstimate[row["SubSystem"], 6] = row['MTBF No Defect (hrs)']
-#
-#print(contractorEstimate[('1',1)])
-
 
 
 #type hinting tuple key and float value
@@ -47,12 +39,6 @@ for _, row in contractorMTBF.iterrows():
 for key, tau in list(tauStar.items()):
     if pd.isna(tau):
         del tauStar[key]
-print(tauStar)
-
-flightHours = round(maintenanceData["Flight Hours"].sum(numeric_only=True), 3)
-
-#stop before Factor Columns
-#factorCol = maintenanceData.columns.get_loc("Factor 1")
 
 runningFlightHours = 0
 
@@ -64,12 +50,6 @@ thetaHat : dict[tuple[int, int], float] = {}
 graphDict : dict[tuple[int,int], list[tuple[any, float, float, float]]] = defaultdict(list)
 
 
-#rewrite plan
-#iterate over every row in maintenanceData.iterrows()
-#add to runningFlightHours
-#for loop to update nStar for that date
-#then calculate graphDict tuple entries for ALL sub,type pairs in thetaHat ?
-
 for num, row in maintenanceData.iterrows():
     runningFlightHours += row["Flight Hours"]
     subCol = row.iloc[3::2]
@@ -79,7 +59,8 @@ for num, row in maintenanceData.iterrows():
     for sub,typ in zip(subCol, typeCol):
         if pd.notna(sub) and pd.notna(typ):
             typ = int(typ)
-            print(sub, typ, end=" ")
+            #debug print statement, keeping in case i need it later
+            #print(sub, typ, end=" ")
             printed = True           
             #n_jk 
             n = nStar.get((sub,typ), 1) + 1
@@ -99,67 +80,7 @@ for num, row in maintenanceData.iterrows():
         confidenceIntervalLower = 2*(tau + runningFlightHours)/(stats.chi2.ppf(0.975, df=2*n))
         graphDict[(subsystem,failureType)].append((row["Date"], mtbfEstimate, confidenceIntervalUpper, confidenceIntervalLower))
 
-
-
-
-#for num, row in maintenanceData.iterrows():
-#    runningFlightHours += row["Flight Hours"]
-#
-#    #subCol = row.iloc[3:factorCol:2]
-#    #typeCol = row.iloc[4:factorCol:2]
-#    subCol = row.iloc[3::2]
-#    typeCol = row.iloc[4::2]
-#
-#    printed = False
-#    for sub, typ in zip(subCol, typeCol):
-#        if pd.notna(sub) and pd.notna(typ):
-#            typ = int(typ)
-#            print(sub, typ, end=" ")
-#            printed = True           
-#            #n_jk
-#            n = nStar.get((sub,typ), 1) + 1
-#            nStar[(sub,typ)] = n
-#
-#            #tau_jk
-#            tau = tauStar.get((sub,typ), 1) + runningFlightHours
-#
-#            #our estimate
-#            mtbfEstimate = round(tau / n, 3)
-#            thetaHat[(sub,typ)] = mtbfEstimate
-#
-#            #upperBound
-#            confidenceIntervalUpper = 2*tau/(stats.chi2.ppf(0.025, df=2*n))
-#
-#            #lowerBound
-#            confidenceIntervalLower = 2*tau/(stats.chi2.ppf(0.975, df=2*n))
-#            graphDict[(sub,typ)].append((row["Date"], mtbfEstimate, confidenceIntervalUpper, confidenceIntervalLower))
-#        else:
-#            continue
-#    if printed:
-#        print() 
-#        #continue
-#
-##i = (sub, type)
-##thetaHat.get(i) = estimate
-##entries with no incidencts recorded
-#for i in tauStar:
-#    if not pd.notna(thetaHat.get(i)):
-#        thetaHat[i] = (runningFlightHours + tauStar[i]) / nStar[i]
-#
-
-#thetaHatDf = pd.DataFrame([
-#    {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
-#    for(sub, ft), theta in sorted(thetaHat.items())
-#])
-#
-#
-#table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
-#table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
-#table3.index.name = 'Subsystem'
-#
-#print(table3.to_string())
 for (sub, typ), series in graphDict.items():
-      print((sub,typ))
       dates, theta, upper, lower = zip(*series)
       dates = pd.to_datetime(dates, format="%y/%m/%d")
 
@@ -188,5 +109,10 @@ for (sub, typ), series in graphDict.items():
       plt.grid(alpha=0.3)
       plt.xticks(rotation=45)
       plt.tight_layout()
-      plt.savefig(f"graphs/{sub}_{typ}.png")
+
+      if not os.path.exists(OUTPUT_FILEPATH):
+          os.makedirs(OUTPUT_FILEPATH)
+
+      plt.savefig(f"{OUTPUT_FILEPATH}/{sub}_{typ}.png")
+
       plt.close()
