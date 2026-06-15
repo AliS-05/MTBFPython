@@ -35,17 +35,18 @@ def calculateBayesEstimate():
     # theta_hat = tau* / n* 
     for (subsystem, failureType), tau in tauStar.items():
         n = nStar.get((subsystem, failureType), 1)
-        thetaHat[(subsystem, failureType)] = round(tau / n, 2)
+        thetaHat[(subsystem, failureType)] = round(tau / n, 1)
 
     thetaHatDf = pd.DataFrame([
         {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
         for(sub, ft), theta in sorted(thetaHat.items())
     ])
-
+    thetaHatDf.to_csv(path_or_buf="./myestimates.csv")
     #printable table
     table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
     table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
     table3.index.name = 'Subsystem'
+    
     print(table3.to_string())
 
 def calculateBayesFactor():
@@ -61,12 +62,13 @@ def calculateBayesFactor():
         probH0 = sp.gammainc(nStar.get((sub,typ),1), (tau / ((1-beta) * theta0)))
         #upper incomplete 'incc'
         probH1 = sp.gammaincc(nStar.get((sub,typ),1), (tau / ((1-beta) * theta0))) 
-        bayesFactor[(sub, typ)] = round((probH1 / probH0) / prior, 2)
+        bayesFactor[(sub, typ)] = round((probH1 / probH0) / prior, 1)
 
     bfDf = pd.DataFrame([
       {"Subsystem": sub, "Failure Type": ft, "BF": bf}
       for (sub, ft), bf in sorted(bayesFactor.items())
     ])
+    bfDf.to_csv(path_or_buf="./mybayesfactors.csv")
 
     table6 = bfDf.pivot(index='Subsystem', columns='Failure Type', values='BF')
     table6.columns = ['BF for Type 1', 'BF for Type 2', 'BF for Type 6']
