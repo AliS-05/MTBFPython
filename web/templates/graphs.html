@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MTBF Graphs</title>
+    <style>
+        .gallery { display: flex; flex-wrap: wrap; gap: 12px; }
+        .gallery img { width: 300px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>MTBF Graphs</h1>
+    <div class="gallery">
+        {% for fname in graphs %}
+            <img src="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
+        {% endfor %}
+    </div>
+</body>
+</html>

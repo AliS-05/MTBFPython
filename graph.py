@@ -105,6 +105,7 @@ def graphPoints():
         plt.savefig(f"{data.OUTPUT_FILEPATH}/{sub}_{typ}.png")
         plt.close()
 
-calculateRunningTauStar()
-constructGraphPoints()
-graphPoints()
+if __name__ == "__main__":
+    calculateRunningTauStar()
+    constructGraphPoints()
+    graphPoints()

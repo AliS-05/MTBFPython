@@ -41,13 +41,12 @@ def calculateBayesEstimate():
         {"Subsystem": sub, "Failure Type": ft, "MTBF Estimate (hrs)": theta}
         for(sub, ft), theta in sorted(thetaHat.items())
     ])
-    thetaHatDf.to_csv(path_or_buf="./myestimates.csv")
     #printable table
     table3 = thetaHatDf.pivot(index='Subsystem', columns='Failure Type', values='MTBF Estimate (hrs)')
     table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
     table3.index.name = 'Subsystem'
     
-    print(table3.to_string())
+    return table3.to_html()
 
 def calculateBayesFactor():
     #calculating bayes factor
@@ -68,8 +67,7 @@ def calculateBayesFactor():
       {"Subsystem": sub, "Failure Type": ft, "BF": bf}
       for (sub, ft), bf in sorted(bayesFactor.items())
     ])
-    bfDf.to_csv(path_or_buf="./mybayesfactors.csv")
-
+    
     table6 = bfDf.pivot(index='Subsystem', columns='Failure Type', values='BF')
     table6.columns = ['BF for Type 1', 'BF for Type 2', 'BF for Type 6']
     table6.index.name = 'Subsystem'
@@ -82,9 +80,16 @@ def calculateBayesFactor():
             return f"{x:.1e}"
         return f"{x:.1f}"
 
-    print(table6.to_string(float_format=fmt))
+    return table6.to_html(float_format=fmt)
 
-calculateNStar()
-calculateTauStar()
-calculateBayesEstimate()
-calculateBayesFactor()
+def main():
+    res = []
+    calculateNStar()
+    calculateTauStar()
+    res.append(calculateBayesEstimate())
+    res.append(calculateBayesFactor())
+    return res
+
+if __name__ == "__main__":
+    main()
+

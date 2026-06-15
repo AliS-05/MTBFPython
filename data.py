@@ -6,7 +6,7 @@ NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
 MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenanceDataReal.csv"
 CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/predictedReal.csv"
-OUTPUT_FILEPATH = "./graphs"
+OUTPUT_FILEPATH = "./web/static/graphs"
 
 def cleanMaintenanceData():
     maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
