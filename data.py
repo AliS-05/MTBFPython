@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-
+from csv import writer
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
-MAINTENANCE_DATA_FILEPATH = "/mnt/c/Users/sefra/Downloads/maintenanceDataReal.csv"
-CONTRACTOR_MTBF_FILEPATH = "/mnt/c/Users/sefra/Downloads/predictedReal.csv"
+MAINTENANCE_DATA_FILEPATH = "./maintenanceDataReal.csv"
+CONTRACTOR_MTBF_FILEPATH = "./predictedReal.csv"
 OUTPUT_FILEPATH = "./web/static/graphs"
 
 def cleanMaintenanceData():
@@ -54,3 +54,12 @@ def reshapeMaintenanceData(maintenanceDataDataFrame):
 
 def calculateTotalFlightHours(maintenanceData):
     return round(maintenanceData["Flight Hours"].sum(numeric_only=True), 3)
+
+
+def addEntryToData(date, hours, system, subSystem, failureType):
+    newRow = [date, hours, system, subSystem, failureType]
+    with open(MAINTENANCE_DATA_FILEPATH, 'a', newline = '') as f:
+        writerObj = writer(f)
+        writerObj.writerow(newRow)
+
+

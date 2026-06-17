@@ -1,3 +1,6 @@
 venv
 graphs
 __pycache__
+maintenanceDataReal.csv
+predictedReal.csv
+

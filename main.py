@@ -82,8 +82,31 @@ def calculateBayesFactor():
 
     return table6.to_html(float_format=fmt)
 
+def returnBayesEstimates():
+    maintenanceData = data.cleanMaintenanceData()
+    flightHours = data.calculateTotalFlightHours(maintenanceData)
+    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
+    contractorMTBF = data.cleanContractorData()
+    contractorEstimates = data.constructContractorEstimates(contractorMTBF)
+
+    calculateNStar()
+    calculateTauStar()
+    return calculateBayesEstimate()
+
+
+def returnBayesFactor():
+    maintenanceData = data.cleanMaintenanceData()
+    flightHours = data.calculateTotalFlightHours(maintenanceData)
+    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
+    contractorMTBF = data.cleanContractorData()
+    contractorEstimates = data.constructContractorEstimates(contractorMTBF)
+
+
+    calculateNStar()
+    calculateTauStar()
+    return calculateBayesFactor()
+
 def main():
-    res = []
     calculateNStar()
     calculateTauStar()
     res.append(calculateBayesEstimate())
