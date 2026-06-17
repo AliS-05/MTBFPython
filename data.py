@@ -4,8 +4,8 @@ from csv import writer
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
-MAINTENANCE_DATA_FILEPATH = "./maintenanceDataReal.csv"
-CONTRACTOR_MTBF_FILEPATH = "./predictedReal.csv"
+MAINTENANCE_DATA_FILEPATH = "./data/maintenanceDataReal.csv"
+CONTRACTOR_MTBF_FILEPATH = "./data/predictedReal.csv"
 OUTPUT_FILEPATH = "./web/static/graphs"
 
 def cleanMaintenanceData():

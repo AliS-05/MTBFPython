@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from flask import Flask, render_template, request
 
 import data
@@ -10,11 +11,16 @@ app = Flask(__name__)
 
 @app.route("/")
 def renderLandingPage():
-    return render_template("landing.html")
+    table3 = main.returnBayesEstimates()
+    contractorEstimatesDF = data.cleanContractorData()
+    contractorEstimates = data.constructContractorEstimates(contractorEstimatesDF)
+    subSystemRatios = main.findWorstPerformingSubSystems()
+    return render_template("landing.html", ratios=subSystemRatios)
 
 @app.route("/table3")
 def serveTable3():
     res = main.returnBayesEstimates()
+    res = res.to_html()
     return render_template("table3.html", table=res)
 
 @app.route("/table6")
@@ -46,3 +52,5 @@ def addData():
         return "Entry added"
     else:
         return "Visit / and submit the form"
+
+

@@ -46,7 +46,7 @@ def calculateBayesEstimate():
     table3.columns = ['Type 1 (Inherent)', 'Type 2 (Induced)', 'Type 6 (No Defect)']
     table3.index.name = 'Subsystem'
     
-    return table3.to_html()
+    return table3
 
 def calculateBayesFactor():
     #calculating bayes factor
@@ -106,6 +106,15 @@ def returnBayesFactor():
     calculateTauStar()
     return calculateBayesFactor()
 
+def findWorstPerformingSubSystems():
+    #return sorted ratios, caller can use splicing to get what they want
+    systemRatios = []
+    for (subsystem, failureType), estimate in thetaHat.items():
+        ratio = estimate / contractorEstimates[(subsystem, failureType)]
+        systemRatios.append(((subsystem, failureType), round(ratio,2)))
+    
+    return sorted(systemRatios, key = lambda x: x[1])[0:5]
+
 def main():
     calculateNStar()
     calculateTauStar()
@@ -115,4 +124,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
