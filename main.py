@@ -111,8 +111,8 @@ def findWorstPerformingSubSystems():
     systemRatios = []
     for (subsystem, failureType), estimate in thetaHat.items():
         ratio = estimate / contractorEstimates[(subsystem, failureType)]
-        systemRatios.append(((subsystem, failureType), round(ratio,2)))
-    
+        systemRatios.append(((int(subsystem), failureType), round(ratio,2)))
+    #sorts based on estimate, ie index 1 of tuple   
     return sorted(systemRatios, key = lambda x: x[1])[0:5]
 
 def main():
