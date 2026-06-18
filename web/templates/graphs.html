@@ -3,11 +3,7 @@
 <head>
 	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 	<title>MTBF Graphs</title>
-	<style>
-		.gallery { display: flex; flex-wrap: wrap; gap: 12px; }
-		.gallery img { width: 300px; border: 1px solid #ccc; }
-	</style>
-</head>
+	</head>
 <body>
 	<nav>
 		<ul>
@@ -15,6 +11,7 @@
 			<li><a href="/table3">Table 3</a></li>
 			<li><a href="/table6">Table 6</a></li>
 			<li><a href="/graphs">View Graphs</a></li>
+			<li><a href="/add">Add Data</a></li>
 		</ul>
 	</nav>
 
@@ -22,7 +19,12 @@
 	<h1>MTBF Graphs</h1>
 	<div class="gallery">
 		{% for fname in graphs %}
-			<img src="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
+			<div class="galleryImg">
+				<p> {{ fname }} </p>
+				<a href="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
+					<img src="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
+				</a>
+			</div>
 		{% endfor %}
 	</div>
 </body>

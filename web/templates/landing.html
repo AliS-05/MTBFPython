@@ -19,9 +19,13 @@
 	<h1>Worst Performing SubSystems</h1>
 	<br>
 	{% for (subsystem, failureType), ratio in ratios %}
-	<h1>Subystem: {{ subsystem }}, Failure Type: {{ failureType }} - Performing at {{ ratio * 100 }}% of Contractor Estimate</h1>
-		<img src="{{ url_for('static', filename='graphs/' ~ subsystem ~ '.0_'~ failureType ~ '.png') }}" width='800' height='500'>
-	{% endfor %}
+	<div class="landingEntries">
+		<h2>Subystem: {{ subsystem }}, Failure Type: {{ failureType }} - Performing at {{ ratio * 100 }}% of Contractor Estimate</h2>
+		<div class="landingImages">
+				<img src="{{ url_for('static', filename='graphs/' ~ subsystem  ~ '.0_'~ failureType ~ '.png') }}">
+		</div>
+		{% endfor %}
+	</div>
 
 </body>
 </html>

@@ -1,21 +1,123 @@
+
+
+body {
+	background-color: #ffffff;
+}
+
+h1 {
+	color : black;
+}
+
+p {
+	color : black;
+}
+
+/*table entries for 3 and 6*/
+tr {
+	color : black;
+	vertical-align : center;
+	text-align : left;
+	border-collapse : collapse;
+
+}
+
+tr:nth-child(even) {
+	background: #f8f8f8;
+}
+
+tr:hover{
+	background : #e8f5e9;
+}
+
+/* outer columns and rows */
+th {
+	color : #2e7d32;
+	padding : 20px;
+}
+
+/* inner entries*/
+td {
+	color : black;
+	vertical-align : center;
+	text-align : center;
+}
+
 nav {
-    background-color: #333;
+	background-color: #4CAF50;
 }
 
 nav ul {
-    list-style: none;
-    display: flex;
-    margin: 0;
-    padding: 0;
+	list-style: none;
+	display: flex;
+	margin: 0;
+	padding: 0;
 }
 
 nav a {
-    display: block;
-    color: white;
-    text-decoration: none;
-    padding: 1rem 1.5rem;
+	display: block;
+	color: black;
+	text-decoration: none;
+	padding: 1rem 1.5rem;
 }
 
 nav a:hover {
-    background-color: #555;
+	background-color: #555;
+}
+
+.table6 {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.table3 {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+
+.gallery { 
+	display: flex; 
+	flex-wrap: wrap; 
+	gap: 12px; 
+}
+
+.gallery img{
+	width: 300px;
+	border: 1px solid #ccc; 
+}
+
+.galleryImg{
+	width: 300px;
+	border: 1px solid #ccc;
+	cursor : pointer;
+}
+
+
+.addForm {
+	display: flex;
+	flex-direction : column;
+	gap : 12px;
+	width : 400px;
+	justify-content: center;
+	align-items : center;
+	padding : 100px;
+	margin : auto;
+	border : 3px solid #000000;
+	text : 20px;
+}
+
+.addForm #dateBox{
+	color : black;
+}
+
+.landingEntries h2{
+	font-size : 20px;
+}
+
+.landingImages img {
+	width : 600px; 
+	height: 400px;
+
 }

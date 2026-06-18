@@ -12,8 +12,6 @@ app = Flask(__name__)
 @app.route("/")
 def renderLandingPage():
     table3 = main.returnBayesEstimates()
-    contractorEstimatesDF = data.cleanContractorData()
-    contractorEstimates = data.constructContractorEstimates(contractorEstimatesDF)
     subSystemRatios = main.findWorstPerformingSubSystems()
     return render_template("landing.html", ratios=subSystemRatios)
 
@@ -32,7 +30,7 @@ def serverTable6():
 @app.route("/graphs")
 def serveGraphs():
     graphDir = os.path.join(app.static_folder, "graphs")
-    files = sorted(os.listdir(graphDir))
+    files = sorted(os.listdir(graphDir), key=lambda x: float(x.split('_')[0]))
     return render_template("graphs.html", graphs=files)
 
 @app.route("/add", methods=["GET", "POST"])
