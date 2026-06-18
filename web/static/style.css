@@ -112,12 +112,26 @@ nav a:hover {
 	color : black;
 }
 
-.landingEntries h2{
-	font-size : 20px;
+.landingGrid {
+	display: grid;
+    	grid-template-columns: repeat(3, 1fr);
+    	gap: 20px;
+    	padding: 20px;
+}
+
+.landingEntry {
+	border: 1px solid #ccc;
+    	padding: 15px;
+    	text-align: center;
+    	background: white;
+}
+
+.landingEntry h2 {
+	font-size: 20px;
 }
 
 .landingImages img {
-	width : 600px; 
-	height: 400px;
-
+	width: 100%;
+	max-width: 600px;
+	height: auto;
 }

@@ -17,15 +17,23 @@
 	</nav>
 
 	<h1>Worst Performing SubSystems</h1>
-	<br>
-	{% for (subsystem, failureType), ratio in ratios %}
-	<div class="landingEntries">
-		<h2>Subystem: {{ subsystem }}, Failure Type: {{ failureType }} - Performing at {{ ratio * 100 }}% of Contractor Estimate</h2>
-		<div class="landingImages">
-				<img src="{{ url_for('static', filename='graphs/' ~ subsystem  ~ '.0_'~ failureType ~ '.png') }}">
-		</div>
-		{% endfor %}
-	</div>
 
+	<div class="landingGrid">
+		{% for (subsystem, failureType), ratio in ratios %}
+		<div class="landingEntry">
+	    		<h2>
+	    			Subsystem: {{ subsystem }}, Failure Type: {{ failureType }}
+	    	        	- Performing at {{ "%.0f"|format(ratio * 100) }}% of Contractor Estimate
+	    	    	</h2>
+
+	    	    	<div class="landingImages">
+
+	    	        	<a href="{{ url_for('static', filename='graphs/' ~ subsystem ~ '.0_' ~ failureType ~ '.png') }}">
+					<img src="{{ url_for('static', filename='graphs/' ~ subsystem ~ '.0_' ~ failureType ~ '.png') }}">
+				</a>
+	    	    	</div>
+	    	</div>
+	    	{% endfor %}
+	</div>
 </body>
 </html>
