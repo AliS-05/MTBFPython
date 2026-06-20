@@ -45,7 +45,7 @@ def serveGraphs():
 def addData():
     print(request.method)
     if request.method == "GET":
-        return render_template("add.html")
+        return render_template("add.html", added="", undone="")
 
     elif request.method == "POST":
         print("Received POST request")
@@ -55,12 +55,13 @@ def addData():
         subSystem = request.form["SubSystem"]
         failureType = request.form["FailureType"]
         data.addEntryToData(date, hours, system, subSystem, failureType)
-        return "Entry added"
+        return render_template("add.html", added="Entry Added", undone="")
     else:
         return "Visit / and submit the form"
 
 @app.route("/undo", methods=["POST"])
 def undoLastEntry():
     data.undoEntry()
-    return "Undid entry"
+    return render_template("add.html", added="", undone="Entry Undone")
+
 
