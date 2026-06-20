@@ -11,9 +11,17 @@ app = Flask(__name__)
 
 @app.route("/")
 def renderLandingPage():
+    maintenanceData = data.cleanMaintenanceData()
+    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
+    maintenanceData = maintenanceData.to_html()
+    
+    contractorData = data.cleanContractorData()
+    contractorTable = contractorData.to_html()
+    
     table3 = main.returnBayesEstimates()
     subSystemRatios = main.findWorstPerformingSubSystems()
-    return render_template("landing.html", ratios=subSystemRatios)
+
+    return render_template("landing.html", maintenanceTable=maintenanceData, contractorTable=contractorTable, ratios=subSystemRatios)
 
 @app.route("/table3")
 def serveTable3():

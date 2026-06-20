@@ -1,45 +1,40 @@
-
-
 body {
 	background-color: #ffffff;
 }
 
 h1 {
-	color : black;
+	color: black;
+	text-align: center;
 }
 
 p {
-	color : black;
+	color: black;
 }
 
-/*table entries for 3 and 6*/
 tr {
-	color : black;
-	vertical-align : center;
-	text-align : left;
-	border-collapse : collapse;
-
+	color: black;
+	vertical-align: center;
+	text-align: left;
+	border-collapse: collapse;
 }
 
 tr:nth-child(even) {
 	background: #f8f8f8;
 }
 
-tr:hover{
-	background : #e8f5e9;
+tr:hover {
+	background: #e8f5e9;
 }
 
-/* outer columns and rows */
 th {
-	color : #2e7d32;
-	padding : 20px;
+	color: #2e7d32;
+	padding: 20px;
 }
 
-/* inner entries*/
 td {
-	color : black;
-	vertical-align : center;
-	text-align : center;
+	color: black;
+	vertical-align: center;
+	text-align: center;
 }
 
 nav {
@@ -76,54 +71,77 @@ nav a:hover {
 	align-items: center;
 }
 
-
 .gallery { 
-	display: flex; 
-	flex-wrap: wrap; 
-	gap: 12px; 
+	display: grid; 
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 4px;
+	padding : 10px;
+	
 }
 
-.gallery img{
-	width: 300px;
+.gallery img {
+	width: 100%;
+	height : auto;
+	display : block;
 	border: 1px solid #ccc; 
 }
 
-.galleryImg{
-	width: 300px;
+.galleryImg {
+	width: 100%;
+	height : auto;
+	display : block;
 	border: 1px solid #ccc;
-	cursor : pointer;
+	cursor: pointer;
 }
-
 
 .addForm {
 	display: flex;
-	flex-direction : column;
-	gap : 12px;
-	width : 400px;
+	flex-direction: column;
+	gap: 12px;
+	width: 400px;
 	justify-content: center;
-	align-items : center;
-	padding : 100px;
-	margin : auto;
-	border : 3px solid #000000;
-	text : 20px;
+	align-items: center;
+	padding: 100px;
+	margin: auto;
+	border: 3px solid #000000;
+	text: 20px;
 }
 
-.addForm #dateBox{
-	color : black;
+.addForm #dateBox {
+	color: black;
+}
+
+.landingTables {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 20px;
+	padding: 0 20px;
+}
+
+.landingColumn {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.tableHeader {
+	text-align: center;
+	font-size: 24px;
+	margin-bottom: 15px;
 }
 
 .landingGrid {
 	display: grid;
-    	grid-template-columns: repeat(3, 1fr);
-    	gap: 20px;
-    	padding: 20px;
+	grid-template-columns: 1fr;
+	gap: 20px;
+	width: 100%;
 }
 
 .landingEntry {
 	border: 1px solid #ccc;
-    	padding: 15px;
-    	text-align: center;
-    	background: white;
+	padding: 15px;
+	text-align: center;
+	background: white;
 }
 
 .landingEntry h2 {
@@ -134,6 +152,18 @@ nav a:hover {
 	width: 100%;
 	max-width: 600px;
 	height: auto;
+}
+
+.landingMaintenanceData,
+.landingContractorData {
+	overflow-x: auto;
+	width: 100%;
+}
+
+.landingMaintenanceData table,
+.landingContractorData table {
+	table-layout: fixed;
+	border-collapse: collapse;
 }
 
 .undo {

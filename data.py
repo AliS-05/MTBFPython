@@ -19,6 +19,7 @@ def cleanMaintenanceData():
 
 def cleanContractorData():
     contractorMTBF = pd.read_csv(CONTRACTOR_MTBF_FILEPATH, skiprows=1)
+    contractorMTBF = contractorMTBF.drop(contractorMTBF.filter(regex='^Unnamed').columns, axis=1)
     contractorMTBF["SubSystem"] = pd.to_numeric(contractorMTBF["SubSystem"], errors="coerce")
     contractorMTBF = contractorMTBF.dropna(subset=["SubSystem"])
     return contractorMTBF
