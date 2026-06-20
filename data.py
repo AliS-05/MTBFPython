@@ -57,9 +57,31 @@ def calculateTotalFlightHours(maintenanceData):
 
 
 def addEntryToData(date, hours, system, subSystem, failureType):
-    newRow = [date, hours, system, subSystem, failureType]
+    fmtDate = pd.to_datetime(date, format="%Y-%m-%d", errors="coerce")
+    newRow = [fmtDate.strftime("%y/%m/%d"), hours, system, subSystem, failureType]
     with open(MAINTENANCE_DATA_FILEPATH, 'a', newline = '') as f:
         writerObj = writer(f)
         writerObj.writerow(newRow)
 
+def removeEntry(date, system, subSystem, failureType):
 
+       return
+        
+def undoEntry():
+    with open(MAINTENANCE_DATA_FILEPATH, "rb+") as f:
+        f.seek(0, 2)
+        pos = f.tell() - 1
+
+        while pos >= 0:
+            f.seek(pos)
+            if f.read(1) not in b"\r\n":
+                break
+            pos -= 1
+
+        while pos >= 0:
+            f.seek(pos)
+            if f.read(1) == b"\n":
+                break
+            pos -= 1
+
+        f.truncate(pos + 1)

@@ -135,3 +135,15 @@ nav a:hover {
 	max-width: 600px;
 	height: auto;
 }
+
+.undo {
+	position: fixed;
+	right: 20px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.undo input {
+	padding: 8px 12px;
+	cursor: pointer;
+}

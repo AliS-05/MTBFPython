@@ -51,4 +51,8 @@ def addData():
     else:
         return "Visit / and submit the form"
 
+@app.route("/undo", methods=["POST"])
+def undoLastEntry():
+    data.undoEntry()
+    return "Undid entry"
 
