@@ -101,7 +101,6 @@ def returnBayesFactor():
     contractorMTBF = data.cleanContractorData()
     contractorEstimates = data.constructContractorEstimates(contractorMTBF)
 
-
     calculateNStar()
     calculateTauStar()
     return calculateBayesFactor()

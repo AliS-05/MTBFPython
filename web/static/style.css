@@ -61,7 +61,7 @@ nav a:hover {
 
 .landingTables {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 20px;
 	padding: 0 20px;
 }
@@ -115,24 +115,26 @@ nav a:hover {
 }
 
 
-.table6 {
+.estimateTables {
+	display : grid;
+	grid-template-columns : 1fr 1fr;
+}
+
+.bayesEstimateTable,
+.bayesFactorTable {
 	display: flex;
+	flex-direction : column;
 	justify-content: center;
 	align-items: center;
 }
 
-.table3 {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
+
 
 .gallery { 
 	display: grid; 
 	grid-template-columns: repeat(6, minmax(0, 1fr));
 	gap: 4px;
 	padding : 10px;
-	
 }
 
 .gallery img {
@@ -186,4 +188,16 @@ nav a:hover {
 .undo input {
 	padding: 8px 12px;
 	cursor: pointer;
+}
+
+.originalDataGrid {
+	display : grid;
+	grid-template-columns : 1fr 1fr;
+}
+
+.contractorData,
+.maintenanceData {
+	display: flex;
+	flex-direction : column;
+	align-items: center;
 }

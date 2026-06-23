@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dashboard</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+	<nav>
+		<ul>
+			<li><a href="/">Home</a></li>
+			<li><a href="/tables">MTBF & Bayes Factors</a></li>
+			<li><a href="/graphs">View Graphs</a></li>
+			<li><a href="/data">Maintenance and Contractor Data</a></li>
+		</ul>
+	</nav>
+
+	<div class="originalDataGrid">
+		<div class="contractorData">
+			<h1>Contractor Data</h1>
+			<div>
+				<p>{{ contractor|safe }}</p>
+			</div>
+		</div>
+		
+		<div class="maintenanceData">
+			<h1>Maintenance Data</h1>
+			<div>
+				<p>{{ maintenance|safe }}</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

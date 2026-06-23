@@ -10,17 +10,23 @@
 	<nav>
 		<ul>
 			<li><a href="/">Home</a></li>
-			<li><a href="/table3">MTBF Estimates</a></li>
-			<li><a href="/table6">Bayes Factors</a></li>
+			<li><a href="/tables">MTBF & Bayes Factors</a></li>
 			<li><a href="/graphs">View Graphs</a></li>
-			<li><a href="/add">Add Data</a></li>
+			<li><a href="/data">Maintenance and Contractor Data</a></li>
 		</ul>
 	</nav>
 
-	<h1>MTBF Estimates</h1>
-	<div class="table3">
-		<p>{{ table|safe }}</p>
-	</div>
+	<div class="estimateTables">
+		<div class="bayesEstimateTable">
+			<h1>Bayes Estimates</h1>
+			<p>{{ bayesEstimateTable|safe }}</p>
+		</div>
+
+		<div class="bayesFactorTable">
+			<h1>Bayes Factor</h1>
+			<p>{{ bayesFactorTable|safe }}</p>
+		</div>
+	<div>
 </body>
 </html>
 

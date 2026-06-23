@@ -10,25 +10,40 @@
 	<nav>
 		<ul>
 			<li><a href="/">Home</a></li>
-			<li><a href="/table3">MTBF Estimates</a></li>
-			<li><a href="/table6">Bayes Factors</a></li>
+			<li><a href="/tables">MTBF & Bayes Factors</a></li>
 			<li><a href="/graphs">View Graphs</a></li>
-			<li><a href="/add">Add Data</a></li>
+			<li><a href="/data">Maintenance and Contractor Data</a></li>
 		</ul>
 	</nav>
 
 	<div class="landingTables">
 		<div class="landingColumn">
-			<h1 class="tableHeader">Maintenance Data</h1>
-			<div class="landingMaintenanceData">
-				<p>{{ maintenanceTable|safe }}</p>
-			</div>
-		</div>
+			<h1 class="tableHeader">Add Data</h1>
+			<div class="addContent">
+				<form action="/add" method="POST" class="addForm">
 
-		<div class="landingColumn">
-			<h1 class="tableHeader">Contractor Data</h1>
-			<div class="landingContractorData">
-				<p>{{ contractorTable|safe }}</p>
+					<label for="dateBox">Date of Incident:</label>
+					<input type="date" id="dateBox" name="Date"><br><br>
+
+					<label for="flightHours">Flight Hours:</label>
+					<input type="number" id="flightHours" name="FlightHours"><br><br>	
+
+					<label for="system">System:</label>
+					<input type="number" id="system" name="System"><br><br>
+				
+					<label for="subSystem">Subsystem:</label>
+					<input type="number" id="subSystem" name="SubSystem"><br><br>
+
+					<label for="failureType">Failure Type:</label>
+					<input type="number" id="failureType" name="FailureType"><br><br>
+					<input type="submit" value="Submit">
+
+				</form>
+
+				<form action="/undo" method="POST" class="undo">
+				    <input type="submit" value="Undo">
+				</form>
+
 			</div>
 		</div>
 
