@@ -6,27 +6,51 @@ import data
 import graph
 import main
 
-
 app = Flask(__name__)
+
+firstLoad = True
 
 @app.route("/")
 def renderLandingPage():
-    subSystemRatios = main.findWorstPerformingSubSystems()
-    return render_template("landing.html", ratios=subSystemRatios)
+    global firstLoad
+    if firstLoad:
+        print("First Load Detected, Calculating Numbers")
+        firstLoad = False
+        #filling out data on first load of website, otherwise blank
+        bayesEstimates = main.returnBayesEstimates()
+        bayesFactors = main.returnBayesFactor()
+
+        subSystemRatios = main.findWorstPerformingSubSystems()
+        return render_template("landing.html", ratios=subSystemRatios)
+    else:
+        subSystemRatios = main.findWorstPerformingSubSystems()
+        return render_template("landing.html", ratios=subSystemRatios)
 
 @app.route("/tables")
 def serveTables():
     bayesEstimates = main.returnBayesEstimates()
-    bayesEstimates = bayesEstimates.to_html()
+    bayesEstimates.insert(0, "Subsystem", [x for x in range(1,30)])
+    bayesEstimates = bayesEstimates.to_html(index=False)
 
     bayesFactors = main.returnBayesFactor()
+
     return render_template("tables.html", bayesEstimateTable=bayesEstimates, bayesFactorTable=bayesFactors)
 
 @app.route("/graphs")
 def serveGraphs():
     graphDir = os.path.join(app.static_folder, "graphs")
     files = sorted(os.listdir(graphDir), key=lambda x: float(x.split('_')[0]))
-    return render_template("graphs.html", graphs=files)
+    fileNames = []
+    for f in files:
+        name, _ = os.path.splitext(f)
+        subsystem, failureType = name.split('_', 1)
+        fileNames.append({
+            "fname" : f,
+            "subsystem" : int(float(subsystem)),
+            "failureType" : failureType
+        })
+
+    return render_template("graphs.html", graphs=fileNames)
 
 @app.route("/add", methods=["POST"])
 def addData():
@@ -37,21 +61,25 @@ def addData():
     subSystem = request.form["SubSystem"]
     failureType = request.form["FailureType"]
     data.addEntryToData(date, hours, system, subSystem, failureType)
-    return render_template("add.html", added="Entry Added", undone="")
+    return renderLandingPage()
 
 @app.route("/undo", methods=["POST"])
 def undoLastEntry():
     data.undoEntry()
-    return render_template("add.html", added="", undone="Entry Undone")
+    return renderLandingPage()
 
 @app.route("/data")
 def serveData():
     originalMaintenanceData = data.cleanMaintenanceData()
     originalMaintenanceData = data.reshapeMaintenanceData(originalMaintenanceData)
-    originalMaintenanceData = originalMaintenanceData.to_html()
+
+    originalMaintenanceData.rename(columns={"date" : "Date", "flight_hours" : "Flight Hours", "system" : "System" , "subsystem" : "Subsystem", "failure_type" : "Failure Type"}, inplace=True)
+
+    originalMaintenanceData = originalMaintenanceData.to_html(index=False)
+
 
     originalContractorEstimates = data.cleanContractorData()
-    originalContractorEstimates = originalContractorEstimates.to_html()
+    originalContractorEstimates = originalContractorEstimates.to_html(index=False)
 
     return render_template("originalData.html", maintenance=originalMaintenanceData, contractor=originalContractorEstimates)
 

@@ -80,7 +80,8 @@ def calculateBayesFactor():
             return f"{x:.1e}"
         return f"{x:.1f}"
 
-    return table6.to_html(float_format=fmt)
+    table6.insert(0, "Subsystem", [x for x in range(1,30)])
+    return table6.to_html(float_format=fmt, index=False)
 
 def returnBayesEstimates():
     maintenanceData = data.cleanMaintenanceData()

@@ -17,11 +17,11 @@
 
 	<h1>MTBF Graphs</h1>
 	<div class="gallery">
-		{% for fname in graphs %}
+		{% for file in graphs %}
 			<div class="galleryImg">
-				<p> {{ fname }} </p>
-				<a href="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
-					<img src="{{ url_for('static', filename='graphs/' + fname) }}" alt="{{ fname }}">
+				<p> {{ "Subsystem: " ~ file.subsystem ~ ", Failure Type: " ~ file.failureType }} </p>
+				<a href="{{ url_for('static', filename='graphs/' + file.fname) }}" alt="{{ fname }}">
+					<img src="{{ url_for('static', filename='graphs/' + file.fname) }}" alt="{{ fname }}">
 				</a>
 			</div>
 		{% endfor %}
