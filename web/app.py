@@ -74,6 +74,8 @@ def serveData():
     originalMaintenanceData = data.reshapeMaintenanceData(originalMaintenanceData)
 
     originalMaintenanceData.rename(columns={"date" : "Date", "flight_hours" : "Flight Hours", "system" : "System" , "subsystem" : "Subsystem", "failure_type" : "Failure Type"}, inplace=True)
+    
+    originalMaintenanceData.sort_values(by="Date", ascending=False, inplace=True)
 
     originalMaintenanceData = originalMaintenanceData.to_html(index=False)
 
