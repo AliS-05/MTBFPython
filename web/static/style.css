@@ -29,11 +29,15 @@ tr:hover {
 	background: #e8f5e9;
 }
 
+
+
 th {
 	color: #2e7d32;
 	padding: 20px;
 	border-bottom: 2px solid #2e7d32;
 }
+
+
 
 td {
 	color: black;
@@ -41,6 +45,11 @@ td {
 	text-align: center;
 	padding : 15px;
 	border-bottom: 3px solid #e0e0e0;
+}
+
+th:nth-child(1),
+td:nth-child(1) {
+	border-right : 2px solid black;
 }
 
 nav {
