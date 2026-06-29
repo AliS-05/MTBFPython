@@ -30,7 +30,7 @@ def renderLandingPage():
 def serveTables():
     bayesEstimates = main.returnBayesEstimates()
     bayesEstimates.insert(0, "Subsystem", [x for x in range(1,30)])
-    bayesEstimates = bayesEstimates.to_html(index=False)
+    bayesEstimates = main.applyEstimatesStyle(bayesEstimates)
 
     bayesFactors = main.returnBayesFactor()
 
@@ -81,6 +81,7 @@ def serveData():
 
 
     originalContractorEstimates = data.cleanContractorData()
+    originalContractorEstimates.rename(columns={"SubSystem" : "Subsystem"}, inplace=True)
     originalContractorEstimates = originalContractorEstimates.to_html(index=False)
 
     return render_template("originalData.html", maintenance=originalMaintenanceData, contractor=originalContractorEstimates)

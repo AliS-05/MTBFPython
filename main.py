@@ -83,6 +83,7 @@ def calculateBayesFactor():
     table6.insert(0, "Subsystem", [x for x in range(1,30)])
     return table6.to_html(float_format=fmt, index=False)
 
+
 def returnBayesEstimates():
     maintenanceData = data.cleanMaintenanceData()
     flightHours = data.calculateTotalFlightHours(maintenanceData)
@@ -94,6 +95,38 @@ def returnBayesEstimates():
     calculateTauStar()
     return calculateBayesEstimate()
 
+def applyEstimatesStyle(df):
+      col_to_type = {
+          'Type 1 (Inherent)': 1,
+          'Type 2 (Induced)': 2,
+          'Type 6 (No Defect)': 6
+      }
+      value_cols = list(col_to_type.keys())
+      subsystem_vals = list(df.index)  # save before reset
+
+      def highlight_low(col):
+          if col.name not in col_to_type:
+              return ['' for _ in col]
+          ft = col_to_type[col.name]
+          return [
+              'background-color: #ffcccc' if (
+                  not pd.isna(val) and
+                  (sub, ft) in contractorEstimates and
+                  val / contractorEstimates[(sub, ft)] < 0.8
+              ) else ''
+              for sub, val in zip(subsystem_vals, col)
+          ]
+
+      styled = (
+          df.reset_index(drop=True).style
+          .apply(highlight_low, axis=0)
+          .format(subset=value_cols, formatter=lambda x: f'{x:.1f}' if not pd.isna(x) else 'NaN')
+      )
+      try:
+          styled = styled.hide(axis='index')
+      except AttributeError:
+          styled = styled.hide_index()
+      return styled.to_html()
 
 def returnBayesFactor():
     maintenanceData = data.cleanMaintenanceData()
