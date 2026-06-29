@@ -60,7 +60,7 @@ def calculateBayesEstimate():
 def calculateBayesFactor():
     #calculating bayes factor
     beta = 0.1
-    prior = np.exp(-1/(1-beta)) / (1 - np.exp(-1/(1-beta)))  # P(H1)/P(H0), constant for fixed beta
+    prior = np.exp(-1/(1-beta)) / (1 - np.exp(-1/(1-beta))) 
 
     for (sub, typ), tau in tauStar.items():
         theta0 = contractorEstimates[(sub, typ)]
@@ -139,14 +139,14 @@ def returnBayesFactor():
     calculateTauStar()
     return calculateBayesFactor()
 
-def findWorstPerformingSubSystems():
+def findWorstPerformingSubSystems(numSubs=3):
     #return sorted ratios, caller can use splicing to get what they want
     systemRatios = []
     for (subsystem, failureType), estimate in thetaHat.items():
         ratio = estimate / contractorEstimates[(subsystem, failureType)]
         systemRatios.append(((int(subsystem), failureType), round(ratio,2)))
     #sorts based on estimate, ie index 1 of tuple   
-    return sorted(systemRatios, key = lambda x: x[1])[0:6]
+    return sorted(systemRatios, key = lambda x: x[1])[0:numSubs]
 
 def main():
     calculateNStar()

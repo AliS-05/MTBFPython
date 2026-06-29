@@ -15,8 +15,17 @@ def renderLandingPage(errorMessage=" "):
     #filling out data on first load of website, otherwise blank
     main.returnBayesEstimates()
 
+    maint = data.cleanMaintenanceData()
+    maint = data.reshapeMaintenanceData(maint)
+
+    maint.rename(columns={"date" : "Date", "flight_hours" : "Flight Hours", "system" : "System" , "subsystem" : "Subsystem", "failure_type" : "Failure Type"}, inplace=True)
+    maint.sort_values(by="Date", ascending=False, inplace=True)
+    maint = maint.iloc[:10]
+    maint = maint.to_html(index=False)
+
     subSystemRatios = main.findWorstPerformingSubSystems()
-    return render_template("landing.html", ratios=subSystemRatios, error=errorMessage)
+
+    return render_template("landing.html", ratios=subSystemRatios, error=errorMessage, recentEntries=maint)
 
 @app.route("/tables")
 def serveTables():
@@ -50,17 +59,17 @@ def addData():
     date = request.form["Date"]
 
     hours = request.form["FlightHours"]
-    if int(hours) < 0 or int(hours) > 24:
+    if not hours or int(hours) < 0 or int(hours) > 24:
         return renderLandingPage(errorMessage="Error, hours cannot be negative or greater than 24, Data Not Added")
 
     system = request.form["System"]
 
     subSystem = request.form["SubSystem"]
-    if int(subSystem) < 1 or int(subSystem) > 29:
+    if not subSystem or int(subSystem) < 1 or int(subSystem) > 29:
         return renderLandingPage(errorMessage="Error, only subsystems 1-29 are supported, Data Not Added")
 
     failureType = request.form["FailureType"]
-    if int(failureType) not in (1,2,6):
+    if not failureType or int(failureType) not in (1,2,6):
         return renderLandingPage(errorMessage="Error, Failure Type can only be 1,2, or 6, Data Not Added")
     data.addEntryToData(date, hours, system, subSystem, failureType)
     return renderLandingPage()

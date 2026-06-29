@@ -113,7 +113,8 @@ nav a:hover {
 
 .landingImages img {
 	width: 100%;
-	max-width: 600px;
+	max-width: 800px;
+	max-height : 600px
 	height: auto;
 }
 
@@ -136,6 +137,16 @@ nav a:hover {
 	justify-content : center;
 	color : red;
 	font-size :30px;
+}
+
+.MostRecentEntries {
+	display : grid;
+	grid-template-columns : 1fr 1fr;
+	display: flex;
+	flex-direction : column;
+	justify-content: center;
+	align-items: center;
+	padding : 40px;
 }
 
 .estimateTables {
