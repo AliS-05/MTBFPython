@@ -11,7 +11,7 @@ app = Flask(__name__)
 firstLoad = True
 
 @app.route("/")
-def renderLandingPage(errorMessage=" "):
+def renderLandingPage(errorMessage=None):
     #filling out data on first load of website, otherwise blank
     main.returnBayesEstimates()
 
