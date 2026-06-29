@@ -12,19 +12,11 @@ firstLoad = True
 
 @app.route("/")
 def renderLandingPage():
-    global firstLoad
-    if firstLoad:
-        print("First Load Detected, Calculating Numbers")
-        firstLoad = False
-        #filling out data on first load of website, otherwise blank
-        bayesEstimates = main.returnBayesEstimates()
-        bayesFactors = main.returnBayesFactor()
+    #filling out data on first load of website, otherwise blank
+    main.returnBayesEstimates()
 
-        subSystemRatios = main.findWorstPerformingSubSystems()
-        return render_template("landing.html", ratios=subSystemRatios)
-    else:
-        subSystemRatios = main.findWorstPerformingSubSystems()
-        return render_template("landing.html", ratios=subSystemRatios)
+    subSystemRatios = main.findWorstPerformingSubSystems()
+    return render_template("landing.html", ratios=subSystemRatios)
 
 @app.route("/tables")
 def serveTables():

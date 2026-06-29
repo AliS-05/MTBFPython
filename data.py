@@ -68,7 +68,6 @@ def addEntryToData(date, hours, system, subSystem, failureType):
         writerObj.writerow(newRow)
 
 def removeEntry(date, system, subSystem, failureType):
-
        return
         
 def undoEntry():

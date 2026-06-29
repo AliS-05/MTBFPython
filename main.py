@@ -8,17 +8,26 @@ import data
 
 maintenanceData = data.cleanMaintenanceData()
 flightHours = data.calculateTotalFlightHours(maintenanceData)
-
 maintenanceData = data.reshapeMaintenanceData(maintenanceData)
-
 contractorMTBF = data.cleanContractorData()
-
 contractorEstimates = data.constructContractorEstimates(contractorMTBF)
 
 nStar : dict[tuple[int,int], float] = {}
 tauStar: dict[tuple[int, int], float] = {}
 thetaHat: dict[tuple[int, int], float] = {}
 bayesFactor: dict[tuple[int, int], float] = {}
+
+def reloadData():
+    global maintenanceData, contractorMTBF, contractorEstimates, flightHours
+    maintenanceData = data.cleanMaintenanceData()
+    flightHours = data.calculateTotalFlightHours(maintenanceData)
+    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
+    contractorMTBF = data.cleanContractorData()
+    contractorEstimates = data.constructContractorEstimates(contractorMTBF)
+    nStar.clear()
+    tauStar.clear()
+    thetaHat.clear()
+
 
 def calculateNStar():
     failureCounts = maintenanceData.groupby(['subsystem', 'failure_type']).size().reset_index(name='count')
@@ -85,12 +94,7 @@ def calculateBayesFactor():
 
 
 def returnBayesEstimates():
-    maintenanceData = data.cleanMaintenanceData()
-    flightHours = data.calculateTotalFlightHours(maintenanceData)
-    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
-    contractorMTBF = data.cleanContractorData()
-    contractorEstimates = data.constructContractorEstimates(contractorMTBF)
-
+    reloadData()
     calculateNStar()
     calculateTauStar()
     return calculateBayesEstimate()
@@ -129,11 +133,7 @@ def applyEstimatesStyle(df):
       return styled.to_html()
 
 def returnBayesFactor():
-    maintenanceData = data.cleanMaintenanceData()
-    flightHours = data.calculateTotalFlightHours(maintenanceData)
-    maintenanceData = data.reshapeMaintenanceData(maintenanceData)
-    contractorMTBF = data.cleanContractorData()
-    contractorEstimates = data.constructContractorEstimates(contractorMTBF)
+    reloadData()
 
     calculateNStar()
     calculateTauStar()
@@ -141,6 +141,7 @@ def returnBayesFactor():
 
 def findWorstPerformingSubSystems():
     #return sorted ratios, caller can use splicing to get what they want
+    reloadData()
     systemRatios = []
     for (subsystem, failureType), estimate in thetaHat.items():
         ratio = estimate / contractorEstimates[(subsystem, failureType)]
