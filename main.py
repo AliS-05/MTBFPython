@@ -141,7 +141,6 @@ def returnBayesFactor():
 
 def findWorstPerformingSubSystems():
     #return sorted ratios, caller can use splicing to get what they want
-    reloadData()
     systemRatios = []
     for (subsystem, failureType), estimate in thetaHat.items():
         ratio = estimate / contractorEstimates[(subsystem, failureType)]
@@ -158,5 +157,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

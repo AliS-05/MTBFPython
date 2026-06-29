@@ -129,6 +129,14 @@ nav a:hover {
 	border-collapse: collapse;
 }
 
+.ErrorMessage,
+.ErrorMessage p{
+	display : flex;
+	align-items : center;
+	justify-content : center;
+	color : red;
+	font-size :30px;
+}
 
 .estimateTables {
 	display : grid;

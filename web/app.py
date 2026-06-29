@@ -11,12 +11,12 @@ app = Flask(__name__)
 firstLoad = True
 
 @app.route("/")
-def renderLandingPage():
+def renderLandingPage(errorMessage=" "):
     #filling out data on first load of website, otherwise blank
     main.returnBayesEstimates()
 
     subSystemRatios = main.findWorstPerformingSubSystems()
-    return render_template("landing.html", ratios=subSystemRatios)
+    return render_template("landing.html", ratios=subSystemRatios, error=errorMessage)
 
 @app.route("/tables")
 def serveTables():
@@ -48,10 +48,20 @@ def serveGraphs():
 def addData():
     print("Received POST request")
     date = request.form["Date"]
+
     hours = request.form["FlightHours"]
+    if int(hours) < 0 or int(hours) > 24:
+        return renderLandingPage(errorMessage="Error, hours cannot be negative or greater than 24, Data Not Added")
+
     system = request.form["System"]
+
     subSystem = request.form["SubSystem"]
+    if int(subSystem) < 1 or int(subSystem) > 29:
+        return renderLandingPage(errorMessage="Error, only subsystems 1-29 are supported, Data Not Added")
+
     failureType = request.form["FailureType"]
+    if int(failureType) not in (1,2,6):
+        return renderLandingPage(errorMessage="Error, Failure Type can only be 1,2, or 6, Data Not Added")
     data.addEntryToData(date, hours, system, subSystem, failureType)
     return renderLandingPage()
 

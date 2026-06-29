@@ -15,6 +15,11 @@
 			<li><a href="/data">Maintenance and Contractor Data</a></li>
 		</ul>
 	</nav>
+	{% if error %}
+	<div class="ErrorMessage">
+		<p>{{ error }}</p>
+	</div>
+	{% endif %}
 
 	<div class="landingTables">
 		<div class="landingColumn">
