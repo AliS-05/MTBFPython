@@ -8,7 +8,6 @@ import main
 
 app = Flask(__name__)
 
-firstLoad = True
 
 @app.route("/")
 def renderLandingPage(errorMessage=None):
@@ -59,7 +58,7 @@ def addData():
     date = request.form["Date"]
 
     hours = request.form["FlightHours"]
-    if not hours or int(hours) < 0 or int(hours) > 24:
+    if not hours or int(float(hours)) < 0 or int(float(hours)) > 24:
         return renderLandingPage(errorMessage="Error, hours cannot be negative or greater than 24, Data Not Added")
 
     system = request.form["System"]

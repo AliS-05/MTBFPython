@@ -1,12 +1,28 @@
 import pandas as pd
 import numpy as np
 from csv import writer
+from openpyxl import load_workbook
 #constants
 NUM_SUBSYSTEMS = 29
 FAILURE_TYPES = 3 # 1, 2, 6
 MAINTENANCE_DATA_FILEPATH = "./data/maintenanceDataReal.csv"
 CONTRACTOR_MTBF_FILEPATH = "./data/predictedReal.csv"
 OUTPUT_FILEPATH = "./web/static/graphs"
+DATASET_FILEPATH = "/mnt/c/Users/sefra/Downloads/dataset.xlsx"
+
+def datasetCleanMaintenanceData():
+    maintenanceData = pd.read_excel(DATASET_FILEPATH, sheet_name="Failure Data")
+    maintenanceData = maintenanceData.drop(maintenanceData.filter(regex='^Unnamed').columns, axis=1)
+    return maintenanceData
+
+def datasetCleanContractorData():
+    contractorMTBF = pd.read_excel(DATASET_FILEPATH, sheet_name="Initial MTBF", skiprows=1)
+    contractorMTBF = contractorMTBF.drop(contractorMTBF.filter(regex='^Unnamed').columns, axis=1)
+    contractorMTBF["SubSystem"] = pd.to_numeric(contractorMTBF["SubSystem"], errors="coerce")
+    contractorMTBF = contractorMTBF.dropna(subset=["SubSystem"])
+    contractorMTBF["SubSystem"] = contractorMTBF["SubSystem"].astype(int)
+    return contractorMTBF
+
 
 def cleanMaintenanceData():
     maintenanceData = pd.read_csv(MAINTENANCE_DATA_FILEPATH)
@@ -88,3 +104,5 @@ def undoEntry():
             pos -= 1
 
         f.truncate(pos + 1)
+
+
