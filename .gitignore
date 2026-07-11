@@ -8,3 +8,6 @@ maintenanceDataRealBackUp.csv
 predictedRealBackUp.csv
 todo
 Rcode.r
+plots_mcmc
+plots_evolution
+plots_validate
