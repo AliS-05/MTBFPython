@@ -1,0 +1,11 @@
+numpy
+pandas
+scipy
+statsmodels
+matplotlib
+pymc
+arviz
+nutpie
+openpyxl
+flask
+patsy
