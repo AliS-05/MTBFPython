@@ -50,7 +50,6 @@ OUT_DIR             = "plots_validate"
 EVOLUTION_DIR       = "plots_evolution_full"
 def evolution_csv(model): return os.path.join(EVOLUTION_DIR, f"mtbf_m{model}.csv")
 MCMC_COLOR          = "#009E73"               # Okabe-Ito bluish green
-EXTEND_WARMUP_LEFT  = True                    # carry the first GLM window flat to the left edge
 
 # --mode compare13
 MDIR    = "plots_mcmc"                        # mcmc_test.py --model 1/3 output
@@ -238,6 +237,11 @@ def run_validate(model=2):
         if g.empty:
             continue
 
+        # trim gamma to start at the first MCMC cutoff — no pre-history stretch
+        start = g.cutoff.iloc[0]
+        keep_m = mdates >= start
+        mdates, mtheta, mupper, mlower = mdates[keep_m], mtheta[keep_m], mupper[keep_m], mlower[keep_m]
+
         th0 = th0_raw[cell_index[(j, k)]]
         plt.figure(figsize=(20, 10))
         plt.axhline(th0, color="blue", linestyle=":", label="Contractor MTBF")
@@ -246,15 +250,6 @@ def run_validate(model=2):
         plt.plot(mdates, mtheta, "r-o", ms=4, label="Bayes Estimate (closed form, monthly)")
         plt.plot(mdates, mupper, "r--", label="95% CI (closed form)")
         plt.plot(mdates, mlower, "r--")
-
-        # carry the first GLM window flat back to the left edge (solid, no markers)
-        # so the model line spans the full axis like the gamma; the live markers
-        # distinguish the month-by-month fits from this warm-up carry-back.
-        if EXTEND_WARMUP_LEFT and len(mdates) and mdates.min() < g.cutoff.iloc[0]:
-            g0, x0 = g.iloc[0], mdates.min()
-            plt.plot([x0, g0.cutoff], [g0[mcol],  g0[mcol]],  color=MCMC_COLOR, lw=2)
-            plt.plot([x0, g0.cutoff], [g0[hicol], g0[hicol]], color=MCMC_COLOR, lw=1.2, linestyle=":")
-            plt.plot([x0, g0.cutoff], [g0[locol], g0[locol]], color=MCMC_COLOR, lw=1.2, linestyle=":")
 
         # evolving Bayesian GLM, monthly (green)
         plt.plot(g.cutoff, g[mcol], color=MCMC_COLOR, marker="o", lw=2, ms=5,
@@ -322,7 +317,7 @@ def run_compare13():
     print(f"  diverge >{DIVERGE:g}x:    {n-within}/{n} ({100*(n-within)/n:.0f}%)")
 
     div = df[(r < 1/DIVERGE) | (r > DIVERGE)].sort_values("ratio_3over1")
-    print(f"\n--- divergent cells (>{DIVERGE:g}x) ---")
+    print(f"\n--- divergent cells (>{DIVERGE:g}x), for Dr. Han ---")
     with pd.option_context("display.float_format", lambda x: f"{x:.1f}"):
         print(div[["subsystem", "ftype", "mtbf_model1", "mtbf_model3", "ratio_3over1"]]
               .to_string())

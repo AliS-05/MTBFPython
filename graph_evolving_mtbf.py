@@ -1,25 +1,26 @@
 """
-evolve_all_models_test.py — extends evolve_all_models.py with Model 2, so ONE run
+graph_evolving_mtbf.py — extends evolve_all_models.py with Model 2, so ONE run
 produces all four MTBF traces per cell over the same expanding cumulative monthly
 windows the closed form uses:
   1. closed-form gamma posterior (phase 1, cheap recursion)
-  2. Model 1  — common factor effects              (NUTS,     == mcmc_test run_model_1)
-  3. Model 2  — subsystem x ftyp-specific only      (NUTS x87, == mcmc_test run_model_2)
-  4. Model 3  — common + specific interactions      (Laplace,  == mcmc_test run_model_3)
+  2. Model 1  — common factor effects              (NUTS,     == mcmc_R_port run_model_1)
+  3. Model 2  — subsystem x ftyp-specific only      (NUTS x87, == mcmc_R_port run_model_2)
+  4. Model 3  — common + specific interactions      (Laplace,  == mcmc_R_port run_model_3)
 
-Reuses the VALIDATED code as-is: designs + priors + fit functions from mcmc_test.py,
+Reuses the VALIDATED code as-is: designs + priors + fit functions from mcmc_R_port.py,
 data/dates + closed form from mtbf_graphs.py. This file only adds the window
 loop, the Model 2 per-cell fit, and the 4-line plot — no model spec is redefined.
 
 IMPORTANT — Model 2 uses RAW (uncentered) factor columns, matching the 2026-07-12 fix
-to mcmc_test.py's run_model_2 (Rcode.r stage 3 fits raw `Fm`, not `Fm - Fm.mean()`).
+to mcmc_R_port.py's run_model_2 (Rcode.r stage 3 fits raw `Fm`, not `Fm - Fm.mean()`).
 The OLD evolve_mtbf.py / cummulativeMcmc.py still centers per-window — that bug was
-never carried into mcmc_test.py's fix and is NOT reused here. Do not copy that file's
+never carried into mcmc_R_port.py's fix and is NOT reused here. Do not copy that file's
 design construction back in.
 
-    python evolve_all_models_test.py --smoke   # 2 cutoffs, Model 2 on 5 cells only
-    python evolve_all_models_test.py           # full run, resumable — leave it overnight
-    python evolve_all_models_test.py --plot-only
+    python graph_evolving_mtbf.py --smoke   # 2 cutoffs, Model 2 on 5 cells only
+    python graph_evolving_mtbf.py           # full run, resumable — leave it overnight
+    python graph_evolving_mtbf.py --plot-only
+    python graph_evolving_mtbf.py --plot-only --models 1 3   # skip Model 2 (e.g. for the poster)
 
 Cost: Model 1 and Model 3 are one fit per cutoff (shared design across all cells, as
 in evolve_all_models.py). Model 2 cannot share a design across cells the same way —
@@ -96,7 +97,7 @@ def month_end_cutoffs(a, b):
 
 def marginal_mtbf_ci(X, off, indc, betas, point_beta):
     """Per-cell exposure-weighted MTBF at each cell's ACTUAL flights — VERBATIM math from
-    mcmc_test._save_marginal_mtbf: MTBF_c = sum(exp(off)) / sum(exp(off + Xc.beta)) over
+    mcmc_R_port._save_marginal_mtbf: MTBF_c = sum(exp(off)) / sum(exp(off + Xc.beta)) over
     cell c's rows. Used for Model 1 and Model 3 (shared design across cells)."""
     off = np.asarray(off, float)
     pt = np.full(NCELL, np.nan)
@@ -288,7 +289,7 @@ def run(smoke):
                 pass
 
         # Model 3 — common + specific, Laplace/bayesglm (point = MAP, per R).
-        # MTBF + CI via the MARGINAL method (== mcmc_test _save_marginal_mtbf), from the
+        # MTBF + CI via the MARGINAL method (== mcmc_R_port _save_marginal_mtbf), from the
         # sim()/Laplace draws (== Rcode.r's sim(n.sims=10000)). Marginal keeps M3 near M1;
         # the at-mean exp(-eta_bar) version extrapolated to the average profile and blew M3 up.
         fs = M.bayesglm_prior_scales(Xf, fs_base)
@@ -322,12 +323,12 @@ def run(smoke):
     make_plots()
 
 
-def make_plots():
+def make_plots(models=(1, 2, 3)):
     if not os.path.exists(CSV_PATH):
         print("no CSV to plot"); return
     ev = pd.read_csv(CSV_PATH, parse_dates=["cutoff"])
     has_m1_ci = "m1_lo95" in ev.columns
-    has_m2    = "m2" in ev.columns and ev["m2"].notna().any()
+    has_m2    = 2 in models and "m2" in ev.columns and ev["m2"].notna().any()
     _, th0_raw, extras = V.build_cells()
     cf = V.closed_form_trajectories(extras["counts_all"], extras["tau_raw"],
                                     extras["dates_all"], th0_raw)
@@ -336,6 +337,20 @@ def make_plots():
         g = g.sort_values("cutoff")
         c = (j - 1) * NTYP + FTYP.index(k)
         th0 = th0_raw[c]
+
+        gm2 = g[g.m2.notna()] if has_m2 else g.iloc[0:0]
+
+        # earliest cutoff among the models actually being plotted for this cell —
+        # trims gamma's pre-history instead of showing it back to the first flight
+        starts = []
+        if 1 in models and g.m1.notna().any():
+            starts.append(g[g.m1.notna()].cutoff.iloc[0])
+        if len(gm2):
+            starts.append(gm2.cutoff.iloc[0])
+        if 3 in models and g.m3.notna().any():
+            starts.append(g[g.m3.notna()].cutoff.iloc[0])
+        start = min(starts) if starts else None
+
         plt.figure(figsize=(20, 10))
         plt.axhline(th0, color="blue", linestyle=":", label="Contractor MTBF")
 
@@ -345,18 +360,21 @@ def make_plots():
             order = np.argsort(cdx[cm].asi8, kind="stable")
             cd = cdx[cm][order]
             th, up, lo = theta[cm][order], upper[cm][order], lower[cm][order]
+            if start is not None:
+                keep = cd >= start
+                cd, th, up, lo = cd[keep], th[keep], up[keep], lo[keep]
             plt.plot(cd, th, color=CF_COLOR, lw=2, label="Closed-form gamma")
             plt.plot(cd, up, color=CF_COLOR, lw=1, linestyle="--", label="Closed-form 95% CI")
             plt.plot(cd, lo, color=CF_COLOR, lw=1, linestyle="--")
 
-        plt.plot(g.cutoff, g.m1, color=M1_COLOR, marker="o", lw=2, ms=5,
-                 label="Model 1 (common)")
-        if has_m1_ci:
-            plt.plot(g.cutoff, g.m1_lo95, color=M1_COLOR, lw=1, linestyle=":",
-                     label="Model 1 95% CI")
-            plt.plot(g.cutoff, g.m1_hi95, color=M1_COLOR, lw=1, linestyle=":")
+        if 1 in models:
+            plt.plot(g.cutoff, g.m1, color=M1_COLOR, marker="o", lw=2, ms=5,
+                     label="Model 1 (common)")
+            if has_m1_ci:
+                plt.plot(g.cutoff, g.m1_lo95, color=M1_COLOR, lw=1, linestyle=":",
+                         label="Model 1 95% CI")
+                plt.plot(g.cutoff, g.m1_hi95, color=M1_COLOR, lw=1, linestyle=":")
 
-        gm2 = g[g.m2.notna()] if has_m2 else g.iloc[0:0]
         if len(gm2):
             plt.plot(gm2.cutoff, gm2.m2, color=M2_COLOR, marker="^", lw=2, ms=5,
                      label="Model 2 (subsystem-specific)")
@@ -364,34 +382,39 @@ def make_plots():
                      label="Model 2 95% CI")
             plt.plot(gm2.cutoff, gm2.m2_hi95, color=M2_COLOR, lw=1, linestyle=":")
 
-        plt.plot(g.cutoff, g.m3, color=M3_COLOR, marker="s", lw=2, ms=5,
-                 label="Model 3 (common + specific)")
-        if "m3_lo95" in ev.columns:
-            plt.plot(g.cutoff, g.m3_lo95, color=M3_COLOR, lw=1, linestyle=":",
-                     label="Model 3 95% CI")
-            plt.plot(g.cutoff, g.m3_hi95, color=M3_COLOR, lw=1, linestyle=":")
+        if 3 in models:
+            plt.plot(g.cutoff, g.m3, color=M3_COLOR, marker="s", lw=2, ms=5,
+                     label="Model 3 (common + specific)")
+            if "m3_lo95" in ev.columns:
+                plt.plot(g.cutoff, g.m3_lo95, color=M3_COLOR, lw=1, linestyle=":",
+                         label="Model 3 95% CI")
+                plt.plot(g.cutoff, g.m3_hi95, color=M3_COLOR, lw=1, linestyle=":")
 
         # Axis hard-capped at Y_CAP x the max of the sane models (gamma + contractor +
         # Model 1 + Model 2); Model 3 and its Laplace CI just clip off the top instead
         # of smushing the plot. n_fail_cum>0 drops the prior-dominated early windows.
         gd = g[g.n_fail_cum > 0]
+        has_m1 = 1 in models and "m1" in ev.columns
+        has_m3 = 3 in models and "m3" in ev.columns
         cap = [th0]
         if (j, k) in cf:
             cap += [v for v in th if np.isfinite(v) and v > 0]
-        if "m1" in ev.columns:
+        if has_m1:
             cap += [v for v in gd.m1 if np.isfinite(v) and v > 0]
         if has_m2:
             cap += [v for v in gd.m2 if np.isfinite(v) and v > 0]
         yhi = Y_CAP * max(cap)
         lows = [v for v in ([th0]
                 + (list(th) + list(lo) if (j, k) in cf else [])
-                + (list(gd.m1) if "m1" in ev.columns else [])
+                + (list(gd.m1) if has_m1 else [])
                 + (list(gd.m2) if has_m2 else [])
-                + (list(gd.m3) if "m3" in ev.columns else []))
+                + (list(gd.m3) if has_m3 else []))
                 if np.isfinite(v) and 0 < v <= yhi]
         plt.ylim((min(lows) if lows else 0.0) * 0.85, yhi)
 
-        plt.title(f"Subsystem {j} Type {k} — closed form vs Model 1 vs Model 2 vs Model 3")
+        shown = " vs ".join(f"Model {m}" for m in (1, 2, 3)
+                            if (m == 1 and has_m1) or (m == 2 and has_m2) or (m == 3 and has_m3))
+        plt.title(f"Subsystem {j} Type {k} — closed form vs {shown}")
         plt.xlabel("Date"); plt.ylabel("MTBF (hrs)")
         plt.legend(); plt.grid(alpha=0.3); plt.xticks(rotation=45)
         plt.tight_layout()
@@ -404,9 +427,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--plot-only", action="store_true")
+    ap.add_argument("--models", type=int, nargs="+", choices=[1, 2, 3], default=[1, 2, 3],
+                    help="plot-only: which model(s) to draw (default all 3), e.g. --plot-only --models 1 3")
     args = ap.parse_args()
     if args.plot_only:
-        make_plots()
+        make_plots(tuple(args.models))
     else:
         run(args.smoke)
 
